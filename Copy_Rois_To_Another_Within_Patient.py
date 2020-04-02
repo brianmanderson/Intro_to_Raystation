@@ -50,10 +50,15 @@ def copy_roi_to_another(patient):
         for exam in case.Examinations:
             if not case.PatientModel.StructureSets[exam.Name].RoiGeometries['Disease_BMA'].HasContours():
                 if case.PatientModel.StructureSets[exam.Name].RoiGeometries['Disease'].HasContours():
+                    case.PatientModel.RegionsOfInterest['Disease_BMA'].CreateExternalGeometry(Examination=exam,
+                                                                                              ThresholdLevel=-250)
+        if case.PatientModel.RegionsOfInterest['Disease_BMA'].Type == 'External':
+            case.PatientModel.RegionsOfInterest['Disease_BMA'].Type = case.PatientModel.RegionsOfInterest['Disease'].Type
+            for exam in case.Examinations:
+                if case.PatientModel.StructureSets[exam.Name].RoiGeometries['Disease'].HasContours():
                     new_contours = get_contour_points_from_roi(case.PatientModel.StructureSets[exam.Name]
                                                                .RoiGeometries['Disease'])
                     case.PatientModel.StructureSets[exam.Name].RoiGeometries['Disease_BMA'].PrimaryShape.Contours = new_contours
-                    patient.Save()
     return None
 
 
@@ -63,7 +68,7 @@ def copy_Lits_Disease():
     for info in info_all:
         patient = patient_db.LoadPatient(PatientInfo=info, AllowPatientUpgrade=False)
         copy_roi_to_another(patient)
-        break
+        patient.Save()
 
 
 if __name__ == '__main__':
